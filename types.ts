@@ -64,6 +64,7 @@ export interface Network {
 
 export interface Board {
     showHint: (letters: Letter[]) => void,
+    deselectAll: () => void,
     boardData: {
         getAllLettersList: () => Letter[];
         wordMultiplierPosition: { collumn: number, row: number; };

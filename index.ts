@@ -114,7 +114,7 @@ export default definePlugin({
 
     get board(): Board | undefined {
         if (!this.window) return;
-        let board;
+        let board: Board | undefined;
 
         if (board) {
             if (!board?.boardData?.getAllLettersList()?.length)
@@ -129,7 +129,7 @@ export default definePlugin({
 
     get gameState(): GameState | undefined {
         if (!this.window) return;
-        let state;
+        let state: GameState | undefined;
 
         if (!state)
             state = findInPixiJsStage(this.window.stage, e => e.playerState);
@@ -171,7 +171,7 @@ export default definePlugin({
 
 
     async patchIframe(baseUrl: string, iframeId: string, searchParams: SearchParams) {
-        if (!settings.store.shouldPatchIframe) return;
+        if (!settings.store.shouldPatchIframe || baseUrl.includes("852509694341283871")) return baseUrl;
         const url = "".concat(baseUrl, "?").concat(new URLSearchParams({ ...searchParams, frame_id: iframeId, platform: "desktop" }) as any);
         this.spellCast = await (await fetch(url, { mode: "no-cors" })).text();
 
@@ -224,8 +224,9 @@ export default definePlugin({
         const that = this;
         hintContainer.button.onClick = function () {
             const word = that.nextHeighestValueWord();
-            if (word)
-                that.board!.showHint(word);
+            if (!word) return;
+            that.board!.deselectAll();
+            that.board!.showHint(word);
         };
     },
 
@@ -291,9 +292,14 @@ export default definePlugin({
 
 
     doNetworkStuff(network: Network) {
+        let patchedHintButton = false;
         waitFor(() => this.window && this.board && this.gameState && this.window.XS.initComplete && network.initialized, () => {
             console.log("hi");
             network.on(constants.networkThingies.newTurn, () => {
+                if (!patchedHintButton) {
+                    this.patchHintButton();
+                    patchedHintButton = true;
+                }
                 if (this.gameState!.isMyTurn) {
                     console.log("new turn GANG AGN AGN AGNAG");
                     this.nextWords = 1;
