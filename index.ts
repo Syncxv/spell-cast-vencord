@@ -20,7 +20,6 @@ import { definePluginSettings } from "@api/Settings";
 import { Devs } from "@utils/constants";
 import { canonicalizeReplacement } from "@utils/patches";
 import definePlugin, { OptionType, PatchReplacement } from "@utils/types";
-import { findByPropsLazy } from "@webpack";
 import { waitFor } from "plugins/imageZoom/utils/waitFor";
 
 import { Solver } from "./Solver";
@@ -166,8 +165,6 @@ export default definePlugin({
     },
 
     async start() {
-        const coolReact = findByPropsLazy("useMemoOne");
-        this.useMemoOne = coolReact.useMemoOne;
         const words = await (await fetch("https://spell.daveyy.net/wordlist.txt")).text();
         this.validWordSet = new Set(words.split("\n").map(l => l.replace(/[\r]/g, "").toLowerCase()));
     },
