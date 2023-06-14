@@ -171,7 +171,7 @@ export default definePlugin({
 
 
     async patchIframe(baseUrl: string, iframeId: string, searchParams: SearchParams) {
-        if (!settings.store.shouldPatchIframe || baseUrl.includes("852509694341283871")) return baseUrl;
+        if (!settings.store.shouldPatchIframe || !baseUrl.includes("852509694341283871")) return baseUrl;
         const url = "".concat(baseUrl, "?").concat(new URLSearchParams({ ...searchParams, frame_id: iframeId, platform: "desktop" }) as any);
         this.spellCast = await (await fetch(url, { mode: "no-cors" })).text();
 
