@@ -18,6 +18,7 @@
 
 import { definePluginSettings } from "@api/Settings";
 import { Devs } from "@utils/constants";
+import { copyWithToast } from "@utils/misc";
 import { canonicalizeReplacement } from "@utils/patches";
 import definePlugin, { OptionType, PatchReplacement } from "@utils/types";
 import { waitFor } from "plugins/imageZoom/utils/waitFor";
@@ -201,6 +202,16 @@ export default definePlugin({
             match: /,(?<let>.{1,2})=({callbacks:{},)/,
             replace: ";let $<let> = parent.$self.network = $2"
         });
+
+        this.patchSpellCast({
+            match: /var (\i)=({objPools:{},)/,
+            replace: "; let $1 = parent.$self.ui = $2"
+        });
+
+        this.patchSpellCast({
+            match: /var (\i)=(\{gameWidth)/,
+            replace: "; let $1 = parent.$self.utils = $2"
+        });
         console.log(iframeId, searchParams);
         const blob = new Blob(
             [
@@ -292,13 +303,14 @@ export default definePlugin({
 
 
     doNetworkStuff(network: Network) {
-        let patchedHintButton = false;
+        let patchedButtons = false;
         waitFor(() => this.window && this.board && this.gameState && this.window.XS.initComplete && network.initialized, () => {
             console.log("hi");
             network.on(constants.networkThingies.newTurn, () => {
-                if (!patchedHintButton) {
+                if (!patchedButtons) {
                     this.patchHintButton();
-                    patchedHintButton = true;
+                    this.addButton();
+                    patchedButtons = true;
                 }
                 if (this.gameState!.isMyTurn) {
                     console.log("new turn GANG AGN AGN AGNAG");
@@ -308,6 +320,83 @@ export default definePlugin({
             }, this.board);
         });
 
+    },
+
+
+
+    addButton() {
+        const padding = 50;
+        const BOARD_CONTAINER = findInPixiJsStage(this.window.stage, e => e?.progressBarBlue).parent.parent;
+
+        const button = new this.window.Graphics();
+        button.beginFill(0x0000FF);
+        button.drawRoundedRect(0, 0, 150, 50, 10);
+        button.endFill();
+        button.position.x = BOARD_CONTAINER.position.x + BOARD_CONTAINER.width / 2;
+        button.position.y = this.utils.gameHeight() - (button.height * 1.75) - padding;
+
+
+
+        button.interactive = true;
+
+        button.mousedown = button.touchstart = data => {
+            this.alpha = 0.5;
+            console.log("YOU CLICCKED ME", data);
+            this.copyGrid();
+        };
+
+        button.mouseup = button.mouseupoutside = button.touchend = button.touchendoutside = function () {
+            this.alpha = 1;
+        };
+
+        button.mouseover = function () {
+            this.alpha = 0.8;
+        };
+
+        button.mouseout = function () {
+            this.alpha = 1;
+        };
+
+        const text = new this.window.Text2(this.window.Host.Localize.Translate("Copy"), { fill: "#FFFFFF", size: 32 });
+        text.anchor.set(0.5);
+        text.x = button.width / 2;
+        text.y = button.height / 2;
+        button.addChild(text);
+
+        this.window.stage.addChild(button);
+
+        button.scale.x = 2;
+        button.scale.y = 2;
+
+        this.button = button;
+
+    },
+
+
+    copyGrid() {
+        if (!this.board || !this.board.boardData.getAllLettersList().length) return;
+        const boardLetters = this.board.boardData.getAllLettersList()
+            .sort(sortLetters)
+            .map(m => m.display)
+            .join("");
+
+        const letterMulti = this.board.boardData.getAllLettersList().find(m => m.hasMultiplier());
+
+        const wordMulti = this.board.boardData.wordMultiplierPosition != null && this.board.boardData.wordMultiplierPosition;
+
+        const data = {
+            letterMulti: {
+                ...(letterMulti != null && {
+                    col: letterMulti.collumn,
+                    row: letterMulti.row,
+                    multi: letterMulti?.getLetterMultiplier()
+                })
+            },
+            ...(wordMulti && { wordMulti: { col: wordMulti.collumn, row: wordMulti.row } })
+        };
+
+
+        copyWithToast(`${boardLetters}|${JSON.stringify(data)}`, "COPPIED");
     }
 
 });
