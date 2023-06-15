@@ -71,7 +71,7 @@ export class Solver {
                 allCombinations.push(combination.slice());
             }
         } else {
-            if (!this.validWordsTrie.exists(word)) {
+            if (!this.validWordsTrie.startsWith(word)) {
                 combination.pop();
                 visited[row][col] = false;
                 return;

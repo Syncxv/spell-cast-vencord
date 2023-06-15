@@ -258,7 +258,7 @@ export default definePlugin({
 
 
     createHintCombos() {
-        if (!this.solver) return;
+        if (!this.solver || !this.board?.boardData.getAllLettersList().length) return;
         this.combos = this.solver.getAllCombinations().map((words, i) =>
             words.map(word => {
                 const score = this.calculateScore(word);
@@ -317,6 +317,12 @@ export default definePlugin({
                     this.nextWords = 1;
                     this.createHintCombos();
                 }
+            }, this.board);
+
+            network.on(constants.networkThingies.boosterUsed, () => {
+                console.log("shuffled eh");
+                this.nextWords = 1;
+                this.createHintCombos();
             }, this.board);
         });
 
