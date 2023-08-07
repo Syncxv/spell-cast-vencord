@@ -17,15 +17,3 @@ src\main\patcher.ts Line 71
 +            options.webPreferences.webSecurity = false;
             if (options?.webPreferences?.preload && options.title) {
 ```
-
-src\main\index.ts Line 90
-```diff
-session.defaultSession.webRequest.onHeadersReceived(({ responseHeaders, resourceType }, cb) => {
-            if (responseHeaders) {
-+                Object.keys(responseHeaders)
-+                    .filter(k => (/^content-security-policy/i).test(k))
-+                    .map(k => (delete responseHeaders[k]));
-+                // if (resourceType === "mainFrame")
-+                //     patchCsp(responseHeaders, "content-security-policy");
-```
-comment out the `if (resourceType === "mainFrame")` and the next line for it to work
