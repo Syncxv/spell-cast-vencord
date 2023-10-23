@@ -53,8 +53,9 @@ export default definePlugin({
         {
             find: "},sandbox:",
             replacement: [
+                // https://regex101.com/r/NOKXdt/1
                 {
-                    match: /(\(.{1,2}\){)(var (?<urlVar>.{1,2})=.{1,3}\.url),(?<middle>.{1,900}),(?<iframeBlock>(?<iframeIdVar>.{1,3})=\(0,.{1,3}\.useMemoOne\).{1,50}\.v4\(\)}\),)\[.{1,20}\]\),(?<rest>.{1,900}POPOUT_CLOSE\))/,
+                    match: /(\(.{1,2}\){)var((?<urlVar>.{1,3})=.{1,2}\.url),(?<middle>.{1,900}),(?<iframeBlock>(?<iframeIdVar>.{1,2})=\(0,.{1,2}\.useMemoOne\).{1,50}\.Z\)\(\)}\),)\[.{1,20}\]\),(?<rest>.{1,900}POPOUT_CLOSE\))/,
                     replace: "$1 const [$<urlVar>, setUrl] = Vencord.Webpack.Common.React.useState($self.settings.store.shouldPatchIframe ? null : e.url); let $<middle>; let $<iframeBlock>[]); Vencord.Webpack.Common.React.useEffect(() => {$self.patchIframe(e.url, $<iframeIdVar>, e.queryParams).then((url) => url != null && setUrl(url))}, []); let $<rest>"
                 },
 
